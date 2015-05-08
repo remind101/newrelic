@@ -9,7 +9,6 @@ RUN apt-get update && apt-get install -y \
 RUN mkdir -p /go/src/app
 WORKDIR /go/src/github.com/remind101/nra
 
-# this will ideally be built by the ONBUILD below ;)
 CMD ["go-wrapper", "run"]
 
 COPY . /go/src/github.com/remind101/nra
