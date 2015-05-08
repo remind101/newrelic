@@ -4,7 +4,7 @@ import (
 	"errors"
 	"runtime"
 
-	"github.com/remind101/nra/newrelic-go-agent/newrelic"
+	"github.com/paulsmith/newrelic-go-agent/newrelic"
 )
 
 var ErrTxAlreadyStarted = errors.New("transaction already started")

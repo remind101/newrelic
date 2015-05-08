@@ -91,7 +91,7 @@ func FromContext(ctx context.Context) (*Tx, bool) {
 	return t, ok
 }
 
-var key int
+type key int
 
 const (
 	txKey key = iota

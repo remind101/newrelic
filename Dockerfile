@@ -14,12 +14,12 @@ CMD ["go-wrapper", "run"]
 COPY . /go/src/github.com/remind101/nra
 
 # Copy newrelic agent sdk lib and headers
-RUN tar -zxf nr_agent_sdk-v0.16.1.0-beta.x86_64.tar.gz && \
+RUN tar -zxf vendor/nr_agent_sdk-v0.16.1.0-beta.x86_64.tar.gz && \
     mkdir -p /usr/local/lib && \
     cp nr_agent_sdk-v0.16.1.0-beta.x86_64/lib/* /usr/local/lib && \
     mkdir -p /usr/local/include && \
     cp nr_agent_sdk-v0.16.1.0-beta.x86_64/include/* /usr/local/include && \
     ldconfig
 
-# RUN go-wrapper download
+RUN go-wrapper download
 RUN go-wrapper install
