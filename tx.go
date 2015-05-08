@@ -1,5 +1,7 @@
 package nra
 
+import "golang.org/x/net/context"
+
 // Tx represents a transaction.
 type Tx struct {
 	Tracer TxTracer
@@ -77,3 +79,20 @@ func (t *Tx) EndSegment() error {
 	}
 	return nil
 }
+
+// WithTx inserts a nra.Tx into the provided context.
+func WithTx(ctx context.Context, t *Tx) context.Context {
+	return context.WithValue(ctx, txKey, t)
+}
+
+// FromContext returns a nra.Tx from the context.
+func FromContext(ctx context.Context) (*Tx, bool) {
+	t, ok := ctx.Value(txKey).(*Tx)
+	return t, ok
+}
+
+var key int
+
+const (
+	txKey key = iota
+)
