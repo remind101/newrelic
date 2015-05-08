@@ -13,7 +13,7 @@ You'll need to install the nr_agent_sdk first. Have a look at the Dockerfile as 
 
 ## Example Usage
 
-``` golang
+``` go
 import "github.com/remind101/nra"
 
 func main() {
