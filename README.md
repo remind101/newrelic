@@ -3,6 +3,14 @@
 A small convenience layer that sits on top of [newrelic-go-agent](https://github.com/paulsmith/newrelic-go-agent), to make
 it easy to create transactions for NewRelic in Go.
 
+## Caveats
+
+This is alpha software. It has not been tested in a production environment, or any environment for that matter.
+
+## Installing
+
+You'll need to install the nr_agent_sdk first. Have a look at the Dockerfile as an example.
+
 ## Example Usage
 
 ``` golang
@@ -35,6 +43,8 @@ func FindAllUsers(ctx context.Context, ) ([]User, error) {
 }
 
 // Add as middleware to your http server
+// WARNING: Be sure you understand this https://docs.newrelic.com/docs/apm/other-features/metrics/metric-grouping-issues
+// The plan is to build some grouping functionality into this package.
 func WithNRA(next http.Handler) http.Handler {
     return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
         tx := nra.NewTx("/my/transaction/name (GET)")
@@ -43,9 +53,6 @@ func WithNRA(next http.Handler) http.Handler {
         next.ServeHTTP(w, r)
     })
 }
-
-
-
 ```
 
 
