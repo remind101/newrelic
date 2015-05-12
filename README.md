@@ -9,7 +9,7 @@ This is alpha software. It has not been tested in a production environment, or a
 
 ## Installing
 
-You'll need to install the nr_agent_sdk first. Have a look at the Dockerfile as an example.
+You'll need to [install the nr_agent_sdk first](https://docs.newrelic.com/docs/agents/agent-sdk/installation-configuration/installing-agent-sdk).
 
 ## Example Usage
 
