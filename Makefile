@@ -1,7 +1,7 @@
 .PHONY: build test
 
 build:
-	docker build -t nra:test .
+	go build .
 
 test: build
-	docker run --rm nra:test go test -v ./...
+	go test -v ./...
