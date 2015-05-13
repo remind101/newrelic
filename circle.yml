@@ -1,0 +1,13 @@
+machine:
+  environment:
+    NR_AGENT: nr_agent_sdk-v0.16.1.0-beta.x86_64
+
+dependencies:
+  cache_directories:
+    - "~/nr_agent"
+
+  pre:
+    - if [[ ! -e ~/nr_agent/$NR_AGENT ]]; then mkdir -p ~/nr_agent/ && curl http://download.newrelic.com/agent_sdk/$NR_AGENT.tar.gz -o ~/nr_agent/$NR_AGENT.tar.gz ; fi
+    - tar -xvf ~/nr_agent/$NR_AGENT.tar.gz
+    - sudo mkdir -p /usr/local/lib && cp $NR_AGENT/lib/* /usr/local/lib && mkdir -p /usr/local/include && cp $NR_AGENT/include/* /usr/local/include
+    - sudo ldconfig
