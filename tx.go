@@ -3,7 +3,16 @@ package nra
 import "golang.org/x/net/context"
 
 // Tx represents a transaction.
-type Tx struct {
+type Tx interface {
+	Start() error
+	End() error
+	StartGeneric(name string)
+	StartDatastore(table, operation, sql, rollupName string)
+	StartExternal(host, name string)
+	EndSegment() error
+}
+
+type tx struct {
 	Tracer TxTracer
 
 	id   int64
@@ -13,18 +22,24 @@ type Tx struct {
 }
 
 // NewTx returns a new transaction.
-func NewTx(name string) *Tx {
-	return &Tx{
-		Tracer: &NRTxTracer{},
+func NewTx(name string, tracer TxTracer) Tx {
+	if tracer == nil {
+		tracer = &NRTxTracer{}
+	}
+	return &tx{
+		Tracer: tracer,
 		name:   name,
 		ss:     NewSegmentStack(),
 	}
 }
 
 // NewRequestTx returns a new transaction with a request url.
-func NewRequestTx(name string, url string) *Tx {
-	return &Tx{
-		Tracer: &NRTxTracer{},
+func NewRequestTx(name string, url string, tracer TxTracer) Tx {
+	if tracer == nil {
+		tracer = &NRTxTracer{}
+	}
+	return &tx{
+		Tracer: tracer,
 		name:   name,
 		url:    url,
 		ss:     NewSegmentStack(),
@@ -32,7 +47,7 @@ func NewRequestTx(name string, url string) *Tx {
 }
 
 // Start starts a transaction, setting the id.
-func (t *Tx) Start() error {
+func (t *tx) Start() error {
 	if t.id != 0 {
 		return ErrTxAlreadyStarted
 	}
@@ -47,7 +62,7 @@ func (t *Tx) Start() error {
 }
 
 // End ends a transaction.
-func (t *Tx) End() error {
+func (t *tx) End() error {
 	for t.ss.Peek() != rootSegment {
 		t.EndSegment()
 	}
@@ -55,25 +70,25 @@ func (t *Tx) End() error {
 }
 
 // StartGeneric starts a generic segment.
-func (t *Tx) StartGeneric(name string) {
+func (t *tx) StartGeneric(name string) {
 	id := t.Tracer.BeginGenericSegment(t.id, t.ss.Peek(), name)
 	t.ss.Push(id)
 }
 
 // StartDatastore starts a datastore segment.
-func (t *Tx) StartDatastore(table, operation, sql, rollupName string) {
+func (t *tx) StartDatastore(table, operation, sql, rollupName string) {
 	id := t.Tracer.BeginDatastoreSegment(t.id, t.ss.Peek(), table, operation, sql, rollupName)
 	t.ss.Push(id)
 }
 
 // StartExternal starts an external segment.
-func (t *Tx) StartExternal(host, name string) {
+func (t *tx) StartExternal(host, name string) {
 	id := t.Tracer.BeginExternalSegment(t.id, t.ss.Peek(), host, name)
 	t.ss.Push(id)
 }
 
 // EndSegment ends the segment at the top of the stack.
-func (t *Tx) EndSegment() error {
+func (t *tx) EndSegment() error {
 	if id, ok := t.ss.Pop(); ok {
 		return t.Tracer.EndSegment(t.id, id)
 	}
@@ -81,13 +96,13 @@ func (t *Tx) EndSegment() error {
 }
 
 // WithTx inserts a nra.Tx into the provided context.
-func WithTx(ctx context.Context, t *Tx) context.Context {
+func WithTx(ctx context.Context, t Tx) context.Context {
 	return context.WithValue(ctx, txKey, t)
 }
 
 // FromContext returns a nra.Tx from the context.
-func FromContext(ctx context.Context) (*Tx, bool) {
-	t, ok := ctx.Value(txKey).(*Tx)
+func FromContext(ctx context.Context) (Tx, bool) {
+	t, ok := ctx.Value(txKey).(Tx)
 	return t, ok
 }
 
