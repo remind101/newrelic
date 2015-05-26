@@ -1,3 +1,5 @@
+// +build nra_enabled
+
 // The new relic agent sdk currently only support linux (https://docs.newrelic.com/docs/agents/agent-sdk/getting-started/new-relic-agent-sdk)
 package nra
 

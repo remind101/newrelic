@@ -11,6 +11,12 @@ This is alpha software. It has not been tested in a production environment, or a
 
 You'll need to [install the nr_agent_sdk first](https://docs.newrelic.com/docs/agents/agent-sdk/installation-configuration/installing-agent-sdk).
 
+This package will only work on linux platforms. It is also disabled by default. To enable it, use the build flag `nra_enabled`:
+
+```
+go build -tags nra_enabled ./...
+```
+
 ## Example Usage
 
 ``` go
