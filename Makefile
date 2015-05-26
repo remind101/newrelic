@@ -4,7 +4,7 @@ build:
 	go build .
 
 test: build
-	go test -v ./...
+	go test -tags nra_enabled -v ./...
 
 docker:
 	docker build -t remind101/nra .
