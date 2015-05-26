@@ -1,4 +1,4 @@
-// +build !linux linux,!nra_enabled
+// +build !nra_enabled
 
 // No op implementation for non linux platforms (new relix agent sdk only support linux right now)
 package nra
