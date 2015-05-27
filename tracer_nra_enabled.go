@@ -26,10 +26,10 @@ func (t *NRTxTracer) BeginGenericSegment(txnID int64, parentID int64, name strin
 	return sdk.SegmentGenericBegin(txnID, parentID, name)
 }
 func (t *NRTxTracer) BeginDatastoreSegment(txnID int64, parentID int64, table string, operation string, sql string, rollupName string) (int64, error) {
-	return sdk.DatastoreSegmentBegin(txnID, parentID, table, operation, sql, rollupName)
+	return sdk.SegmentDatastoreBegin(txnID, parentID, table, operation, sql, rollupName)
 }
 func (t *NRTxTracer) BeginExternalSegment(txnID int64, parentID int64, host string, name string) (int64, error) {
-	return sdk.ExternalSegmentBegin(txnID, parentID, host, name)
+	return sdk.SegmentExternalBegin(txnID, parentID, host, name)
 }
 func (t *NRTxTracer) EndSegment(txnID int64, parentID int64) error {
 	_, err := sdk.SegmentEnd(txnID, parentID)

@@ -159,7 +159,7 @@ func TransactionBegin() (int64, error) {
  * @param transaction_id  id of transaction
  * @return  0 on success, else negative warning code or error code
  */
-func TransactionSetTypeWeb(id float64) (int, error) {
+func TransactionSetTypeWeb(id int64) (int, error) {
 	return errNo(C.newrelic_transaction_set_type_web(C.long(id)), "transaction_set_type_web")
 }
 
@@ -171,7 +171,7 @@ func TransactionSetTypeWeb(id float64) (int, error) {
  * @param transaction_id  id of transaction
  * @return  0 on success, else negative warning code or error code
  */
-func TransactionSetTypeOther(id float64) (int, error) {
+func TransactionSetTypeOther(id int64) (int, error) {
 	return errNo(C.newrelic_transaction_set_type_other(C.long(id)), "transaction_set_type_other")
 }
 
@@ -182,7 +182,7 @@ func TransactionSetTypeOther(id float64) (int, error) {
  * @param category  name of the transaction category
  * @return  0 on success, else negative warning code or error code
  */
-func TransactionSetCategory(id float64, category string) (int, error) {
+func TransactionSetCategory(id int64, category string) (int, error) {
 	ccategory := C.CString(category)
 	defer C.free(unsafe.Pointer(ccategory))
 	return errNo(C.newrelic_transaction_set_category(C.long(id), ccategory), "transaction_set_category")
@@ -199,7 +199,7 @@ func TransactionSetCategory(id float64, category string) (int, error) {
  * @param stack_frame_delimiter  delimiter to split stack trace into frames
  * @return  0 on success, else negative warning code or error code
  */
-func TransactionNoticeError(id float64, exceptionType, errorMessage, stackTrace, stackFrameDelim string) (int, error) {
+func TransactionNoticeError(id int64, exceptionType, errorMessage, stackTrace, stackFrameDelim string) (int, error) {
 	cexceptionType := C.CString(exceptionType)
 	defer C.free(unsafe.Pointer(cexceptionType))
 
@@ -224,7 +224,7 @@ func TransactionNoticeError(id float64, exceptionType, errorMessage, stackTrace,
  * @param value  attribute value
  * @return  0 on success, else negative warning code or error code
  */
-func TransactionAddAttribute(id float64, name, value string) (int, error) {
+func TransactionAddAttribute(id int64, name, value string) (int, error) {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
 
@@ -241,7 +241,7 @@ func TransactionAddAttribute(id float64, name, value string) (int, error) {
  * @param name  transaction name
  * @return  0 on success, else negative warning code or error code
  */
-func TransactionSetName(id float64, name string) (int, error) {
+func TransactionSetName(id int64, name string) (int, error) {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
 
@@ -256,7 +256,7 @@ func TransactionSetName(id float64, name string) (int, error) {
  * @param request_url  request url for a web transaction
  * @return  0 on success, else negative warning code or error code
  */
-func TransactionSetRequestURL(id float64, url string) (int, error) {
+func TransactionSetRequestURL(id int64, url string) (int, error) {
 	curl := C.CString(url)
 	defer C.free(unsafe.Pointer(curl))
 
@@ -273,7 +273,7 @@ func TransactionSetRequestURL(id float64, url string) (int, error) {
  * @param max_trace_segments  maximum number of trace segments
  * @return  0 on success, else negative warning code or error code
  */
-func TransactionSetMaxTraceSegments(id float64, max int) (int, error) {
+func TransactionSetMaxTraceSegments(id int64, max int) (int, error) {
 	return errNo(C.newrelic_transaction_set_max_trace_segments(C.long(id), C.int(max)), "transaction_set_max_trace_segments")
 }
 
@@ -283,7 +283,7 @@ func TransactionSetMaxTraceSegments(id float64, max int) (int, error) {
  * @param transaction_id  id of transaction
  * @return  0 on success, else negative warning code or error code
  */
-func TransactionEnd(id float64) (int, error) {
+func TransactionEnd(id int64) (int, error) {
 	return errNo(C.newrelic_transaction_end(C.long(id)), "transaction_end")
 }
 
@@ -297,7 +297,7 @@ func TransactionEnd(id float64) (int, error) {
  * @param name  name to represent segment
  * @return  segment id on success, else negative warning code or error code
  */
-func SegmentGenericBegin(id, parent float64, name string) (int64, error) {
+func SegmentGenericBegin(id, parent int64, name string) (int64, error) {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
 
@@ -348,7 +348,7 @@ func SegmentGenericBegin(id, parent float64, name string) (int64, error) {
  * @param sql_obfuscator  a function pointer that takes sql and obfuscates it
  * @return  segment id on success, else negative warning code or error code
  */
-func SegmentDatastoreBegin(id, parent float64, table, operation, sql, sqlTraceRollupName string) (int64, error) {
+func SegmentDatastoreBegin(id, parent int64, table, operation, sql, sqlTraceRollupName string) (int64, error) {
 	ctable := C.CString(table)
 	defer C.free(unsafe.Pointer(ctable))
 
@@ -381,7 +381,7 @@ func SegmentDatastoreBegin(id, parent float64, table, operation, sql, sqlTraceRo
  * @param name  name of the external transaction
  * @return  segment id on success, else negative warning code or error code
  */
-func SegmentExternalBegin(id, parent float64, host, name string) (int64, error) {
+func SegmentExternalBegin(id, parent int64, host, name string) (int64, error) {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
 
@@ -398,6 +398,6 @@ func SegmentExternalBegin(id, parent float64, host, name string) (int64, error) 
  * @param egment_id  id of the segment to end
  * @return  0 on success, else negative warning code or error code
  */
-func SegmentEnd(id, segId float64) (int, error) {
+func SegmentEnd(id, segId int64) (int, error) {
 	return errNo(C.newrelic_segment_end(C.long(id), C.long(segId)), "segement_end")
 }
