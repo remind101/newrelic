@@ -6,12 +6,12 @@ RUN apt-get update && apt-get install -y \
     --no-install-recommends \
   && rm -rf /var/lib/apt/lists/*
 
-RUN mkdir -p /go/src/app
-WORKDIR /go/src/app
+RUN mkdir -p /go/src/github.com/remind101/nra
+WORKDIR /go/src/github.com/remind101/nra
 
 CMD ["/go/bin/app"]
 
-COPY . /go/src/app
+COPY . /go/src/github.com/remind101/nra
 
 # Copy newrelic agent sdk lib and headers
 RUN curl http://download.newrelic.com/agent_sdk/nr_agent_sdk-v0.16.1.0-beta.x86_64.tar.gz | tar zx && \
