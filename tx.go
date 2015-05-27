@@ -6,9 +6,9 @@ import "golang.org/x/net/context"
 type Tx interface {
 	Start() error
 	End() error
-	StartGeneric(name string)
-	StartDatastore(table, operation, sql, rollupName string)
-	StartExternal(host, name string)
+	StartGeneric(name string) error
+	StartDatastore(table, operation, sql, rollupName string) error
+	StartExternal(host, name string) error
 	EndSegment() error
 }
 
@@ -48,11 +48,15 @@ func NewRequestTx(name string, url string, tracer TxTracer) Tx {
 
 // Start starts a transaction, setting the id.
 func (t *tx) Start() error {
+	var err error
+
 	if t.id != 0 {
 		return ErrTxAlreadyStarted
 	}
-	t.id = t.Tracer.BeginTransaction()
-	if err := t.Tracer.SetTransactionName(t.id, t.name); err != nil {
+	if t.id, err = t.Tracer.BeginTransaction(); err != nil {
+		return err
+	}
+	if err = t.Tracer.SetTransactionName(t.id, t.name); err != nil {
 		return err
 	}
 	if t.url != "" {
@@ -70,21 +74,33 @@ func (t *tx) End() error {
 }
 
 // StartGeneric starts a generic segment.
-func (t *tx) StartGeneric(name string) {
-	id := t.Tracer.BeginGenericSegment(t.id, t.ss.Peek(), name)
+func (t *tx) StartGeneric(name string) error {
+	id, err := t.Tracer.BeginGenericSegment(t.id, t.ss.Peek(), name)
+	if err != nil {
+		return err
+	}
 	t.ss.Push(id)
+	return nil
 }
 
 // StartDatastore starts a datastore segment.
-func (t *tx) StartDatastore(table, operation, sql, rollupName string) {
-	id := t.Tracer.BeginDatastoreSegment(t.id, t.ss.Peek(), table, operation, sql, rollupName)
+func (t *tx) StartDatastore(table, operation, sql, rollupName string) error {
+	id, err := t.Tracer.BeginDatastoreSegment(t.id, t.ss.Peek(), table, operation, sql, rollupName)
+	if err != nil {
+		return err
+	}
 	t.ss.Push(id)
+	return nil
 }
 
 // StartExternal starts an external segment.
-func (t *tx) StartExternal(host, name string) {
-	id := t.Tracer.BeginExternalSegment(t.id, t.ss.Peek(), host, name)
+func (t *tx) StartExternal(host, name string) error {
+	id, err := t.Tracer.BeginExternalSegment(t.id, t.ss.Peek(), host, name)
+	if err != nil {
+		return err
+	}
 	t.ss.Push(id)
+	return nil
 }
 
 // EndSegment ends the segment at the top of the stack.
