@@ -10,4 +10,4 @@ docker:
 	docker build -t remind101/nra .
 
 docker_test: docker
-	docker run remind101/nra bash -c "cd /go/src/app && make test"
+	docker run remind101/nra bash -c "cd /go/src/github.com/remind101/nra && make test"
