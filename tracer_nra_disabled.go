@@ -15,20 +15,20 @@ func Init(app, key string) {
 
 type NRTxTracer struct{}
 
-func (t *NRTxTracer) BeginTransaction() int64 {
-	return 0
+func (t *NRTxTracer) BeginTransaction() (int64, error) {
+	return 0, nil
 }
 func (t *NRTxTracer) SetTransactionName(txnID int64, name string) error {
 	return nil
 }
-func (t *NRTxTracer) BeginGenericSegment(txnID int64, parentID int64, name string) int64 {
-	return 0
+func (t *NRTxTracer) BeginGenericSegment(txnID int64, parentID int64, name string) (int64, error) {
+	return 0, nil
 }
-func (t *NRTxTracer) BeginDatastoreSegment(txnID int64, parentID int64, table string, operation string, sql string, rollupName string) int64 {
-	return 0
+func (t *NRTxTracer) BeginDatastoreSegment(txnID int64, parentID int64, table string, operation string, sql string, rollupName string) (int64, error) {
+	return 0, nil
 }
-func (t *NRTxTracer) BeginExternalSegment(txnID int64, parentID int64, host string, name string) int64 {
-	return 0
+func (t *NRTxTracer) BeginExternalSegment(txnID int64, parentID int64, host string, name string) (int64, error) {
+	return 0, nil
 }
 func (t *NRTxTracer) EndSegment(txnID int64, parentID int64) error {
 	return nil
