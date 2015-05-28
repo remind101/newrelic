@@ -1,9 +1,9 @@
-// +build nra_enabled
+// +build newrelic_enabled
 
 // The new relic agent sdk currently only support linux (https://docs.newrelic.com/docs/agents/agent-sdk/getting-started/new-relic-agent-sdk)
-package nra
+package newrelic
 
-import "github.com/remind101/nra/sdk"
+import "github.com/remind101/newrelic/sdk"
 
 // Init initializes the embedded newrelic agent with the given app name and license key.
 func Init(app, key string) {
