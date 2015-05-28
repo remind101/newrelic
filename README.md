@@ -11,34 +11,34 @@ This is alpha software. It has not been tested in a production environment, or a
 
 You'll need to [install the nr_agent_sdk first](https://docs.newrelic.com/docs/agents/agent-sdk/installation-configuration/installing-agent-sdk).
 
-This package will only work on linux platforms. It is also disabled by default. To enable it, use the build flag `nra_enabled`:
+This package will only work on linux platforms. It is also disabled by default. To enable it, use the build flag `newrelic_enabled`:
 
 ```
-go build -tags nra_enabled ./...
+go build -tags newrelic_enabled ./...
 ```
 
 ## Example Usage
 
 ``` go
-import "github.com/remind101/nra"
+import "github.com/remind101/newrelic"
 
 func main() {
-    nra.Init("My App", "<new relic license key>")
+    newrelic.Init("My App", "<new relic license key>")
 
     // Add to a context.Context
     // https://godoc.org/golang.org/x/net/context
-    tx := nra.NewTx("/my/transaction/name", nil)
+    tx := newrelic.NewTx("/my/transaction/name", nil)
     tx.Start()
     defer tx.End()
 
     ctx := context.Background()
-    ctx = nra.WithTx(ctx, tx)
+    ctx = newrelic.WithTx(ctx, tx)
 
 }
 
 // Add a segment to the current transaction if one exists
 func FindAllUsers(ctx context.Context, ) ([]User, error) {
-    tx, ok := nra.FromContext(ctx)
+    tx, ok := newrelic.FromContext(ctx)
     if ok {
         // Start a datastore segment
         tx.StartDatastore("users", "SELECT", "SELECT * from users WHERE id = 1", "FindAllUsers")
@@ -53,7 +53,7 @@ func FindAllUsers(ctx context.Context, ) ([]User, error) {
 // The plan is to build some grouping functionality into this package.
 func WithNRA(next http.Handler) http.Handler {
     return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-        tx := nra.NewTx("/my/transaction/name (GET)")
+        tx := newrelic.NewTx("/my/transaction/name (GET)")
         tx.Start()
         defer tx.End()
         next.ServeHTTP(w, r)

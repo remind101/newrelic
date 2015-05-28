@@ -1,4 +1,4 @@
-package nra
+package newrelic
 
 import "sync"
 

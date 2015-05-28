@@ -4,10 +4,10 @@ build:
 	go build .
 
 test: build
-	go test -tags nra_enabled -v ./...
+	go test -tags newrelic_enabled -v ./...
 
 docker:
-	docker build -t remind101/nra .
+	docker build -t remind101/newrelic .
 
 docker_test: docker
-	docker run remind101/nra bash -c "cd /go/src/github.com/remind101/nra && make test"
+	docker run remind101/newrelic bash -c "cd /go/src/github.com/remind101/newrelic && make test"

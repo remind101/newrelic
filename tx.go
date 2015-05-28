@@ -1,4 +1,4 @@
-package nra
+package newrelic
 
 import "golang.org/x/net/context"
 
@@ -111,12 +111,12 @@ func (t *tx) EndSegment() error {
 	return nil
 }
 
-// WithTx inserts a nra.Tx into the provided context.
+// WithTx inserts a newrelic.Tx into the provided context.
 func WithTx(ctx context.Context, t Tx) context.Context {
 	return context.WithValue(ctx, txKey, t)
 }
 
-// FromContext returns a nra.Tx from the context.
+// FromContext returns a newrelic.Tx from the context.
 func FromContext(ctx context.Context) (Tx, bool) {
 	t, ok := ctx.Value(txKey).(Tx)
 	return t, ok

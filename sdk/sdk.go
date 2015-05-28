@@ -1,4 +1,4 @@
-// +build nra_enabled
+// +build newrelic_enabled
 
 package sdk
 
