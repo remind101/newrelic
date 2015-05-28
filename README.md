@@ -27,7 +27,7 @@ func main() {
 
     // Add to a context.Context
     // https://godoc.org/golang.org/x/net/context
-    tx := nra.NewTx("/my/transaction/name")
+    tx := nra.NewTx("/my/transaction/name", nil)
     tx.Start()
     defer tx.End()
 
