@@ -12,6 +12,7 @@ import "C"
 import (
 	"errors"
 	"fmt"
+	"path/filepath"
 	"runtime"
 	"unsafe"
 )
@@ -28,25 +29,37 @@ var errNoMap = map[int]string{
 }
 
 // errNo returns an error if the errno is < 0
-func errNo(i C.int, context string) (int, error) {
+func errNo(i C.int) (int, error) {
 	errno := int(i)
 	if errno < 0 {
 		errMsg := "unknown"
 		if e, ok := errNoMap[errno]; ok {
 			errMsg = e
 		}
-		return errno, errors.New(fmt.Sprintf("newrelic[%s]: %s", context, errMsg))
+		return errno, errors.New(fmt.Sprintf("newrelic[%s]: %s", caller(), errMsg))
 	}
 	return errno, nil
 }
 
-func errNoLong(i C.long, context string) (int64, error) {
-	_, err := errNo(C.int(i), context)
+func errNoLong(i C.long) (int64, error) {
+	_, err := errNo(C.int(i))
 	return int64(i), err
 }
 
-// InitEmbeddedMode registers the message handler with the newrelic embedded message handler
+// caller returns the name of the function that called the function this function was called from.
+func caller() string {
+	name := "unknown"
+	if pc, _, _, ok := runtime.Caller(1); ok {
+		name = filepath.Base(runtime.FuncForPC(pc).Name())
+	}
+	return name
+}
+
+// InitEmbeddedMode registers the message handler with the newrelic embedded message handler.
 // and calls Init.
+//
+// NOTE: I haven't been able to get embedded mode to work. Daemon mode is the only option
+// at the momemt.
 func InitEmbeddedMode(license string, appName string) (int, error) {
 	C.newrelic_register_message_handler((*[0]byte)(C.newrelic_message_handler))
 	return doInit(license, appName, "Go", runtime.Version())
@@ -76,7 +89,7 @@ func doInit(license string, appName string, language string, languageVersion str
 	defer C.free(unsafe.Pointer(clangVersion))
 
 	errno := C.newrelic_init(clicense, cappName, clang, clangVersion)
-	return errNo(errno, "init")
+	return errNo(errno)
 }
 
 /**
@@ -89,7 +102,7 @@ func doInit(license string, appName string, language string, languageVersion str
 func RequestShutdown(reason string) (int, error) {
 	creason := C.CString(reason)
 	defer C.free(unsafe.Pointer(creason))
-	return errNo(C.newrelic_request_shutdown(creason), "request_shutdown")
+	return errNo(C.newrelic_request_shutdown(creason))
 }
 
 /*
@@ -114,7 +127,7 @@ func EnableInstrumentation(setEnabled int) {
 func RecordMetric(name string, value float64) (int, error) {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
-	return errNo(C.newrelic_record_metric(cname, C.double(value)), "record_metric")
+	return errNo(C.newrelic_record_metric(cname, C.double(value)))
 }
 
 /*
@@ -125,7 +138,7 @@ func RecordMetric(name string, value float64) (int, error) {
  * @return  0 on success, else negative warning code or error code
  */
 func RecordCPUUsage(userTimeSecs, cpuUsagePerc float64) (int, error) {
-	return errNo(C.newrelic_record_cpu_usage(C.double(userTimeSecs), C.double(cpuUsagePerc)), "record_cpu_usage")
+	return errNo(C.newrelic_record_cpu_usage(C.double(userTimeSecs), C.double(cpuUsagePerc)))
 }
 
 /*
@@ -135,7 +148,7 @@ func RecordCPUUsage(userTimeSecs, cpuUsagePerc float64) (int, error) {
  * @return  0 on success, else negative warning code or error code
  */
 func RecordMemoryUsage(memMB float64) (int, error) {
-	return errNo(C.newrelic_record_memory_usage(C.double(memMB)), "record_memory_usage")
+	return errNo(C.newrelic_record_memory_usage(C.double(memMB)))
 }
 
 /*
@@ -148,7 +161,7 @@ func RecordMemoryUsage(memMB float64) (int, error) {
  * @return  transaction id on success, else negative warning code or error code
  */
 func TransactionBegin() (int64, error) {
-	return errNoLong(C.newrelic_transaction_begin(), "transaction_begin")
+	return errNoLong(C.newrelic_transaction_begin())
 }
 
 /*
@@ -160,7 +173,7 @@ func TransactionBegin() (int64, error) {
  * @return  0 on success, else negative warning code or error code
  */
 func TransactionSetTypeWeb(id int64) (int, error) {
-	return errNo(C.newrelic_transaction_set_type_web(C.long(id)), "transaction_set_type_web")
+	return errNo(C.newrelic_transaction_set_type_web(C.long(id)))
 }
 
 /*
@@ -172,7 +185,7 @@ func TransactionSetTypeWeb(id int64) (int, error) {
  * @return  0 on success, else negative warning code or error code
  */
 func TransactionSetTypeOther(id int64) (int, error) {
-	return errNo(C.newrelic_transaction_set_type_other(C.long(id)), "transaction_set_type_other")
+	return errNo(C.newrelic_transaction_set_type_other(C.long(id)))
 }
 
 /*
@@ -185,7 +198,7 @@ func TransactionSetTypeOther(id int64) (int, error) {
 func TransactionSetCategory(id int64, category string) (int, error) {
 	ccategory := C.CString(category)
 	defer C.free(unsafe.Pointer(ccategory))
-	return errNo(C.newrelic_transaction_set_category(C.long(id), ccategory), "transaction_set_category")
+	return errNo(C.newrelic_transaction_set_category(C.long(id), ccategory))
 }
 
 /*
@@ -212,7 +225,7 @@ func TransactionNoticeError(id int64, exceptionType, errorMessage, stackTrace, s
 	cstackFrameDelim := C.CString(stackFrameDelim)
 	defer C.free(unsafe.Pointer(cstackFrameDelim))
 
-	return errNo(C.newrelic_transaction_notice_error(C.long(id), cexceptionType, cerrorMessage, cstackTrace, cstackFrameDelim), "transaction_notice_error")
+	return errNo(C.newrelic_transaction_notice_error(C.long(id), cexceptionType, cerrorMessage, cstackTrace, cstackFrameDelim))
 }
 
 /*
@@ -231,7 +244,7 @@ func TransactionAddAttribute(id int64, name, value string) (int, error) {
 	cvalue := C.CString(value)
 	defer C.free(unsafe.Pointer(cvalue))
 
-	return errNo(C.newrelic_transaction_add_attribute(C.long(id), cname, cvalue), "transaction_add_attribute")
+	return errNo(C.newrelic_transaction_add_attribute(C.long(id), cname, cvalue))
 }
 
 /*
@@ -245,7 +258,7 @@ func TransactionSetName(id int64, name string) (int, error) {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
 
-	return errNo(C.newrelic_transaction_set_name(C.long(id), cname), "transaction_set_name")
+	return errNo(C.newrelic_transaction_set_name(C.long(id), cname))
 }
 
 /*
@@ -260,7 +273,7 @@ func TransactionSetRequestURL(id int64, url string) (int, error) {
 	curl := C.CString(url)
 	defer C.free(unsafe.Pointer(curl))
 
-	return errNo(C.newrelic_transaction_set_request_url(C.long(id), curl), "transaction_set_request_url")
+	return errNo(C.newrelic_transaction_set_request_url(C.long(id), curl))
 }
 
 /*
@@ -274,7 +287,7 @@ func TransactionSetRequestURL(id int64, url string) (int, error) {
  * @return  0 on success, else negative warning code or error code
  */
 func TransactionSetMaxTraceSegments(id int64, max int) (int, error) {
-	return errNo(C.newrelic_transaction_set_max_trace_segments(C.long(id), C.int(max)), "transaction_set_max_trace_segments")
+	return errNo(C.newrelic_transaction_set_max_trace_segments(C.long(id), C.int(max)))
 }
 
 /*
@@ -284,7 +297,7 @@ func TransactionSetMaxTraceSegments(id int64, max int) (int, error) {
  * @return  0 on success, else negative warning code or error code
  */
 func TransactionEnd(id int64) (int, error) {
-	return errNo(C.newrelic_transaction_end(C.long(id)), "transaction_end")
+	return errNo(C.newrelic_transaction_end(C.long(id)))
 }
 
 /*
@@ -301,7 +314,7 @@ func SegmentGenericBegin(id, parent int64, name string) (int64, error) {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
 
-	return errNoLong(C.newrelic_segment_generic_begin(C.long(id), C.long(parent), cname), "segment_generic_begin")
+	return errNoLong(C.newrelic_segment_generic_begin(C.long(id), C.long(parent), cname))
 }
 
 /*
@@ -369,7 +382,7 @@ func SegmentDatastoreBegin(id, parent int64, table, operation, sql, sqlTraceRoll
 		csql,
 		csqlTraceRollupName,
 		(*[0]byte)(C.newrelic_basic_literal_replacement_obfuscator),
-	), "segment_datastore_begin")
+	))
 }
 
 /*
@@ -388,7 +401,7 @@ func SegmentExternalBegin(id, parent int64, host, name string) (int64, error) {
 	chost := C.CString(host)
 	defer C.free(unsafe.Pointer(chost))
 
-	return errNoLong(C.newrelic_segment_external_begin(C.long(id), C.long(parent), chost, cname), "segment_external_begin")
+	return errNoLong(C.newrelic_segment_external_begin(C.long(id), C.long(parent), chost, cname))
 }
 
 /*
@@ -399,5 +412,5 @@ func SegmentExternalBegin(id, parent int64, host, name string) (int64, error) {
  * @return  0 on success, else negative warning code or error code
  */
 func SegmentEnd(id, segId int64) (int, error) {
-	return errNo(C.newrelic_segment_end(C.long(id), C.long(segId)), "segement_end")
+	return errNo(C.newrelic_segment_end(C.long(id), C.long(segId)))
 }
