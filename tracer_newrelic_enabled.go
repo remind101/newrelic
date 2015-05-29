@@ -22,16 +22,19 @@ func (t *NRTxTracer) SetTransactionName(txnID int64, name string) error {
 	_, err := sdk.TransactionSetName(txnID, name)
 	return err
 }
-func (t *NRTxTracer) BeginGenericSegment(txnID int64, parentID int64, name string) (int64, error) {
+func (t *NRTxTracer) ReportError(txnID int64, exceptionType, errorMessage, stackTrace, stackFrameDelim string) (int, error) {
+	return sdk.TransactionNoticeError(txnID, exceptionType, errorMessage, stackTrace, stackFrameDelim)
+}
+func (t *NRTxTracer) BeginGenericSegment(txnID, parentID int64, name string) (int64, error) {
 	return sdk.SegmentGenericBegin(txnID, parentID, name)
 }
-func (t *NRTxTracer) BeginDatastoreSegment(txnID int64, parentID int64, table string, operation string, sql string, rollupName string) (int64, error) {
+func (t *NRTxTracer) BeginDatastoreSegment(txnID, parentID int64, table, operation, sql, rollupName string) (int64, error) {
 	return sdk.SegmentDatastoreBegin(txnID, parentID, table, operation, sql, rollupName)
 }
-func (t *NRTxTracer) BeginExternalSegment(txnID int64, parentID int64, host string, name string) (int64, error) {
+func (t *NRTxTracer) BeginExternalSegment(txnID, parentID int64, host, name string) (int64, error) {
 	return sdk.SegmentExternalBegin(txnID, parentID, host, name)
 }
-func (t *NRTxTracer) EndSegment(txnID int64, parentID int64) error {
+func (t *NRTxTracer) EndSegment(txnID, parentID int64) error {
 	_, err := sdk.SegmentEnd(txnID, parentID)
 	return err
 }
