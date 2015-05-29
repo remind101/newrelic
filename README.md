@@ -23,8 +23,6 @@ go build -tags newrelic_enabled ./...
 import "github.com/remind101/newrelic"
 
 func main() {
-    newrelic.Init("My App", "<new relic license key>")
-
     // Add to a context.Context
     // https://godoc.org/golang.org/x/net/context
     tx := newrelic.NewTx("/my/transaction/name", nil)
@@ -60,12 +58,3 @@ func WithNRA(next http.Handler) http.Handler {
     })
 }
 ```
-
-
-
-## Software Credits
-
-The development of this software was made possible using the following components:
-
-[newrelic-go-agent](https://github.com/paulsmith/newrelic-go-agent) by Paul Smith 
-Licensed Under: Apache License, Version 2.0
