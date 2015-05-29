@@ -38,7 +38,7 @@ func main() {
 
 This packages works well as an [httpx middleware](https://github.com/remind101/pkg/blob/master/httpx/middleware/newrelic_tracer.go).
 
-Here is an example using [httpx](https://github.com/remind101/pkg/tree/master/httpx, a context aware http handler.
+Here is an example using [httpx](https://github.com/remind101/pkg/tree/master/httpx), a context aware http handler.
 
 ``` go
     r := httpx.NewRouter()
@@ -52,7 +52,9 @@ Here is an example using [httpx](https://github.com/remind101/pkg/tree/master/ht
     h = middleware.NewRelicTracing(r, r, &newrelic.NRTxTracer{})
 
     // Wrap the route in middleware to add a context.Context.
-    return middleware.BackgroundContext(h)
+    h = middleware.BackgroundContext(h)
+
+    http.ListenAndServe(":8080", h)
 ```
 
 The above example will create web transactions named `GET "/articles"` and `GET "/articles/{id}"`.
