@@ -111,6 +111,12 @@ func (t *tx) EndSegment() error {
 	return nil
 }
 
+// ReportError reports an error that occured during the transaction.
+func (t *tx) ReportError(exceptionType, errorMessage, stackTrace, stackFrameDelim string) error {
+	_, err := t.Tracer.ReportError(t.id, exceptionType, errorMessage, stackTrace, stackFrameDelim)
+	return err
+}
+
 // WithTx inserts a newrelic.Tx into the provided context.
 func WithTx(ctx context.Context, t Tx) context.Context {
 	return context.WithValue(ctx, txKey, t)
