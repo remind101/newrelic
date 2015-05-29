@@ -1,26 +1,8 @@
-FROM golang:1.4.2
-MAINTAINER Sanjay R <sanjay@remind101.com>
-
-RUN apt-get update && apt-get install -y \
-    libboost-all-dev libcurl4-openssl-dev \
-    --no-install-recommends \
-  && rm -rf /var/lib/apt/lists/*
-
-RUN mkdir -p /go/src/github.com/remind101/newrelic
-WORKDIR /go/src/github.com/remind101/newrelic
-
-CMD ["/go/bin/app"]
+FROM remind101/go:1.4-newrelic
 
 COPY . /go/src/github.com/remind101/newrelic
 
-# Copy newrelic agent sdk lib and headers
-RUN curl http://download.newrelic.com/agent_sdk/nr_agent_sdk-v0.16.1.0-beta.x86_64.tar.gz | tar zx && \
-    mkdir -p /usr/local/lib && \
-    cp nr_agent_sdk-v0.16.1.0-beta.x86_64/lib/* /usr/local/lib && \
-    mkdir -p /usr/local/include && \
-    cp nr_agent_sdk-v0.16.1.0-beta.x86_64/include/* /usr/local/include && \
-    ldconfig
+WORKDIR /go/src/github.com/remind101/newrelic
 
 RUN go-wrapper download -tags newrelic_enabled ./...
-
 RUN go-wrapper install -tags newrelic_enabled ./...

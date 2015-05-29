@@ -23,38 +23,36 @@ go build -tags newrelic_enabled ./...
 import "github.com/remind101/newrelic"
 
 func main() {
-    // Add to a context.Context
-    // https://godoc.org/golang.org/x/net/context
-    tx := newrelic.NewTx("/my/transaction/name", nil)
+    tx := newrelic.NewTx("/my/transaction/name")
     tx.Start()
     defer tx.End()
 
-    ctx := context.Background()
-    ctx = newrelic.WithTx(ctx, tx)
-
-}
-
-// Add a segment to the current transaction if one exists
-func FindAllUsers(ctx context.Context, ) ([]User, error) {
-    tx, ok := newrelic.FromContext(ctx)
-    if ok {
-        // Start a datastore segment
-        tx.StartDatastore("users", "SELECT", "SELECT * from users WHERE id = 1", "FindAllUsers")
-        defer tx.EndSegment()
-    }
-
-    // look up users, etc
-}
-
-// Add as middleware to your http server
-// WARNING: Be sure you understand this https://docs.newrelic.com/docs/apm/other-features/metrics/metric-grouping-issues
-// The plan is to build some grouping functionality into this package.
-func WithNRA(next http.Handler) http.Handler {
-    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-        tx := newrelic.NewTx("/my/transaction/name (GET)")
-        tx.Start()
-        defer tx.End()
-        next.ServeHTTP(w, r)
-    })
+    // Add a segment
+    tx.StartGeneric("middleware")
+    // Do some middleware stuff...
+    tx.EndSegment()
 }
 ```
+
+## Using with an http server
+
+This packages works well as an [httpx middleware](https://github.com/remind101/pkg/blob/master/httpx/middleware/newrelic_tracer.go).
+
+Here is an example using [httpx](https://github.com/remind101/pkg/tree/master/httpx, a context aware http handler.
+
+``` go
+    r := httpx.NewRouter()
+
+    r.Handle("/articles", &ArticlesHandler{}).Methods("GET")
+    r.Handle("/articles/{id}", &ArticleHandler{}).Methods("GET")
+
+    var h httpx.Handler
+
+    // Add NewRelic tracing.
+    h = middleware.NewRelicTracing(r, r, &newrelic.NRTxTracer{})
+
+    // Wrap the route in middleware to add a context.Context.
+    return middleware.BackgroundContext(h)
+```
+
+The above example will create web transactions named `GET "/articles"` and `GET "/articles/{id}"`.
