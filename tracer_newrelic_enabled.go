@@ -22,9 +22,6 @@ func (t *NRTxTracer) SetTransactionName(txnID int64, name string) error {
 	_, err := sdk.TransactionSetName(txnID, name)
 	return err
 }
-func (t *NRTxTracer) ReportError(txnID int64, exceptionType, errorMessage, stackTrace, stackFrameDelim string) (int, error) {
-	return sdk.TransactionNoticeError(txnID, exceptionType, errorMessage, stackTrace, stackFrameDelim)
-}
 func (t *NRTxTracer) BeginGenericSegment(txnID, parentID int64, name string) (int64, error) {
 	return sdk.SegmentGenericBegin(txnID, parentID, name)
 }

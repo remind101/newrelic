@@ -23,12 +23,15 @@ type TxTracer interface {
 	SetTransactionName(txnID int64, name string) error
 	SetTransactionRequestURL(txnID int64, url string) error
 
-	ReportError(txnID int64, exceptionType, errorMessage, stackTrace, stackFrameDelim string) (int, error)
-
 	BeginGenericSegment(txnID int64, parentID int64, name string) (int64, error)
 	BeginDatastoreSegment(txnID int64, parentID int64, table string, operation string, sql string, rollupName string) (int64, error)
 	BeginExternalSegment(txnID int64, parentID int64, host string, name string) (int64, error)
 	EndSegment(txnID int64, parentID int64) error
+}
+
+// TxReporter reports the first error that occured during a transaction.
+type TxReporter interface {
+	ReportError(txnID int64, exceptionType, errorMessage, stackTrace, stackFrameDelim string) (int, error)
 }
 
 // Recorder handles metrics recording.

@@ -12,8 +12,10 @@ type Tx interface {
 	EndSegment() error
 }
 
+// tx implements the Tx interface.
 type tx struct {
-	Tracer TxTracer
+	Tracer   TxTracer
+	Reporter TxReporter
 
 	id   int64
 	name string
@@ -22,28 +24,20 @@ type tx struct {
 }
 
 // NewTx returns a new transaction.
-func NewTx(name string, tracer TxTracer) Tx {
-	if tracer == nil {
-		tracer = &NRTxTracer{}
-	}
+func NewTx(name string) *tx {
 	return &tx{
-		Tracer: tracer,
-		name:   name,
-		ss:     NewSegmentStack(),
+		Tracer:   &NRTxTracer{},
+		Reporter: &NRTxReporter{},
+		name:     name,
+		ss:       NewSegmentStack(),
 	}
 }
 
 // NewRequestTx returns a new transaction with a request url.
-func NewRequestTx(name string, url string, tracer TxTracer) Tx {
-	if tracer == nil {
-		tracer = &NRTxTracer{}
-	}
-	return &tx{
-		Tracer: tracer,
-		name:   name,
-		url:    url,
-		ss:     NewSegmentStack(),
-	}
+func NewRequestTx(name string, url string) *tx {
+	t := NewTx(name)
+	t.url = url
+	return t
 }
 
 // Start starts a transaction, setting the id.
@@ -113,7 +107,7 @@ func (t *tx) EndSegment() error {
 
 // ReportError reports an error that occured during the transaction.
 func (t *tx) ReportError(exceptionType, errorMessage, stackTrace, stackFrameDelim string) error {
-	_, err := t.Tracer.ReportError(t.id, exceptionType, errorMessage, stackTrace, stackFrameDelim)
+	_, err := t.Reporter.ReportError(t.id, exceptionType, errorMessage, stackTrace, stackFrameDelim)
 	return err
 }
 

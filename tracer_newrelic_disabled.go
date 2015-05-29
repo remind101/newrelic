@@ -27,9 +27,6 @@ func (t *NRTxTracer) SetTransactionName(txnID int64, name string) error {
 func (t *NRTxTracer) SetTransactionRequestURL(txnID int64, url string) error {
 	return nil
 }
-func (t *NRTxTracer) ReportError(txnID int64, exceptionType, errorMessage, stackTrace, stackFrameDelim string) (int, error) {
-	return 0, nil
-}
 func (t *NRTxTracer) BeginGenericSegment(txnID, parentID int64, name string) (int64, error) {
 	return 0, nil
 }
