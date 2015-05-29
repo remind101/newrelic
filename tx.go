@@ -10,6 +10,7 @@ type Tx interface {
 	StartDatastore(table, operation, sql, rollupName string) error
 	StartExternal(host, name string) error
 	EndSegment() error
+	ReportError(exceptionType, errorMessage, stackTrace, stackFrameDelim string) error
 }
 
 // tx implements the Tx interface.
