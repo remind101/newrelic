@@ -7,14 +7,6 @@ import (
 
 var ErrTxAlreadyStarted = errors.New("transaction already started")
 
-type Agent interface {
-	Recorder
-	TxTracer
-	Init(license string, appName string, lang string, langVersion string) error
-	EnableInstrumentation(enabled bool)
-	RequestShutdown(reason string) error
-}
-
 // TxTracer handles transaction tracing.
 type TxTracer interface {
 	BeginTransaction() (int64, error)
