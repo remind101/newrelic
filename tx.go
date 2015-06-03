@@ -127,7 +127,7 @@ func FromContext(ctx context.Context) (Tx, bool) {
 	return t, ok
 }
 
-type DoneFunc func()
+type DoneFunc func() error
 
 // TraceReq traces an http request. It returns a new context with the transaction
 // included in it, and a func to be called when the request is finished.
@@ -136,40 +136,41 @@ type DoneFunc func()
 //
 //     ctx, done := TraceRequest(ctx, name, req)
 //     defer done()
-func TraceRequest(ctx context.Context, name string, req *http.Request) (context.Context, DoneFunc) {
+func TraceRequest(ctx context.Context, name string, req *http.Request) (context.Context, DoneFunc, error) {
 	tx := NewRequestTx(name, req.URL.String())
 	ctx = WithTx(ctx, tx)
-	tx.Start()
-
-	return ctx, func() {
-		tx.End()
+	err := tx.Start()
+	df := func() error {
+		return tx.End()
 	}
+
+	return ctx, df, err
 }
 
 // TraceExternal adds an external segment to the newrelic transaction, if one exists in the context.
-func TraceExternal(ctx context.Context, host, name string) DoneFunc {
-	return trace(ctx, name, func(tx Tx) {
-		tx.StartExternal(host, name)
+func TraceExternal(ctx context.Context, host, name string) (DoneFunc, error) {
+	return trace(ctx, name, func(tx Tx) error {
+		return tx.StartExternal(host, name)
 	})
 }
 
 // TraceGeneric adds a generic segment to the newrelic transaction, if one exists in the context.
-func TraceGeneric(ctx context.Context, name string) DoneFunc {
-	return trace(ctx, name, func(tx Tx) {
-		tx.StartGeneric(name)
+func TraceGeneric(ctx context.Context, name string) (DoneFunc, error) {
+	return trace(ctx, name, func(tx Tx) error {
+		return tx.StartGeneric(name)
 	})
 }
 
 // trace is a helper function for TraceExternal and TraceGeneric, you probably don't want
 // to use it directly.
-func trace(ctx context.Context, name string, fn func(Tx)) DoneFunc {
+func trace(ctx context.Context, name string, fn func(Tx) error) (DoneFunc, error) {
 	if tx, ok := FromContext(ctx); ok {
-		fn(tx)
-		return func() {
-			tx.EndSegment()
-		}
+		err := fn(tx)
+		return func() error {
+			return tx.EndSegment()
+		}, err
 	}
-	return func() {}
+	return func() error { return nil }, nil
 }
 
 type key int
