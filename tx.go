@@ -134,9 +134,9 @@ type DoneFunc func()
 //
 // Usage:
 //
-//     ctx, done := TraceRequest(name, req, ctx)
+//     ctx, done := TraceRequest(ctx, name, req)
 //     defer done()
-func TraceRequest(name string, req *http.Request, ctx context.Context) (context.Context, DoneFunc) {
+func TraceRequest(ctx context.Context, name string, req *http.Request) (context.Context, DoneFunc) {
 	tx := NewRequestTx(name, req.URL.String())
 	ctx = WithTx(ctx, tx)
 	tx.Start()
