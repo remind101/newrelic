@@ -1,6 +1,10 @@
 package newrelic
 
-import "golang.org/x/net/context"
+import (
+	"net/http"
+
+	"golang.org/x/net/context"
+)
 
 // Tx represents a transaction.
 type Tx interface {
@@ -121,6 +125,51 @@ func WithTx(ctx context.Context, t Tx) context.Context {
 func FromContext(ctx context.Context) (Tx, bool) {
 	t, ok := ctx.Value(txKey).(Tx)
 	return t, ok
+}
+
+type DoneFunc func()
+
+// TraceReq traces an http request. It returns a new context with the transaction
+// included in it, and a func to be called when the request is finished.
+//
+// Usage:
+//
+//     ctx, done := TraceRequest(name, req, ctx)
+//     defer done()
+func TraceRequest(name string, req *http.Request, ctx context.Context) (context.Context, DoneFunc) {
+	tx := NewRequestTx(name, req.URL.String())
+	ctx = WithTx(ctx, tx)
+	tx.Start()
+
+	return ctx, func() {
+		tx.End()
+	}
+}
+
+// TraceExternal adds an external segment to the newrelic transaction, if one exists in the context.
+func TraceExternal(ctx context.Context, host, name string) DoneFunc {
+	return trace(ctx, name, func(tx Tx) {
+		tx.StartExternal(host, name)
+	})
+}
+
+// TraceGeneric adds a generic segment to the newrelic transaction, if one exists in the context.
+func TraceGeneric(ctx context.Context, name string) DoneFunc {
+	return trace(ctx, name, func(tx Tx) {
+		tx.StartGeneric(name)
+	})
+}
+
+// trace is a helper function for TraceExternal and TraceGeneric, you probably don't want
+// to use it directly.
+func trace(ctx context.Context, name string, fn func(Tx)) DoneFunc {
+	if tx, ok := FromContext(ctx); ok {
+		fn(tx)
+		return func() {
+			tx.EndSegment()
+		}
+	}
+	return func() {}
 }
 
 type key int
