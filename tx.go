@@ -127,35 +127,50 @@ func FromContext(ctx context.Context) (Tx, bool) {
 	return t, ok
 }
 
-type DoneFunc func() error
+type Trace struct {
+	err  error
+	done func() error
+}
+
+func (t *Trace) Err() error {
+	return t.err
+}
+
+func (t *Trace) Done() {
+	if t.err == nil {
+		t.err = t.done()
+	}
+}
 
 // TraceReq traces an http request. It returns a new context with the transaction
-// included in it, and a func to be called when the request is finished.
+// included in it, and a trace object.
 //
 // Usage:
 //
-//     ctx, done := TraceRequest(ctx, name, req)
-//     defer done()
-func TraceRequest(ctx context.Context, name string, req *http.Request) (context.Context, DoneFunc, error) {
+//     ctx, t := TraceRequest(ctx, name, req)
+//     defer t.Done()
+func TraceRequest(ctx context.Context, name string, req *http.Request) (context.Context, *Trace) {
 	tx := NewRequestTx(name, req.URL.String())
 	ctx = WithTx(ctx, tx)
 	err := tx.Start()
-	df := func() error {
-		return tx.End()
-	}
 
-	return ctx, df, err
+	return ctx, &Trace{
+		err: err,
+		done: func() error {
+			return tx.End()
+		},
+	}
 }
 
 // TraceExternal adds an external segment to the newrelic transaction, if one exists in the context.
-func TraceExternal(ctx context.Context, host, name string) (DoneFunc, error) {
+func TraceExternal(ctx context.Context, host, name string) *Trace {
 	return trace(ctx, name, func(tx Tx) error {
 		return tx.StartExternal(host, name)
 	})
 }
 
 // TraceGeneric adds a generic segment to the newrelic transaction, if one exists in the context.
-func TraceGeneric(ctx context.Context, name string) (DoneFunc, error) {
+func TraceGeneric(ctx context.Context, name string) *Trace {
 	return trace(ctx, name, func(tx Tx) error {
 		return tx.StartGeneric(name)
 	})
@@ -163,14 +178,17 @@ func TraceGeneric(ctx context.Context, name string) (DoneFunc, error) {
 
 // trace is a helper function for TraceExternal and TraceGeneric, you probably don't want
 // to use it directly.
-func trace(ctx context.Context, name string, fn func(Tx) error) (DoneFunc, error) {
+func trace(ctx context.Context, name string, fn func(Tx) error) *Trace {
 	if tx, ok := FromContext(ctx); ok {
 		err := fn(tx)
-		return func() error {
-			return tx.EndSegment()
-		}, err
+		return &Trace{
+			err: err,
+			done: func() error {
+				return tx.EndSegment()
+			},
+		}
 	}
-	return func() error { return nil }, nil
+	return &Trace{nil, func() error { return nil }}
 }
 
 type key int
