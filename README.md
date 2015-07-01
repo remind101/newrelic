@@ -19,6 +19,8 @@ go build -tags newrelic_enabled ./...
 
 ## Example Usage
 
+See `./example/main.go` for a more complete example.
+
 ``` go
 import "github.com/remind101/newrelic"
 
