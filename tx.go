@@ -2,6 +2,8 @@ package newrelic
 
 import (
 	"net/http"
+	"path/filepath"
+	"runtime"
 
 	"golang.org/x/net/context"
 )
@@ -142,7 +144,7 @@ func (t *Trace) Done() {
 	}
 }
 
-// TraceReq traces an http request. It returns a new context with the transaction
+// TraceReqest traces an http request. It returns a new context with the transaction
 // included in it, and a trace object.
 //
 // Usage:
@@ -176,6 +178,21 @@ func TraceGeneric(ctx context.Context, name string) *Trace {
 	})
 }
 
+// TraceDatastore adds a datastore segment to the newrelic transaction, if one exists in the context.
+func TraceDatastore(ctx context.Context, table, operation, sql, rollupName string) *Trace {
+	return trace(ctx, rollupName, func(tx Tx) error {
+		return tx.StartDatastore(table, operation, sql, rollupName)
+	})
+}
+
+// TraceFunc adds a generic segment, autodetecting the function name with runtime.Caller().
+func TraceFunc(ctx context.Context) *Trace {
+	name := caller(2) // Get the caller that called TraceFunc.
+	return trace(ctx, name, func(tx Tx) error {
+		return tx.StartGeneric(name)
+	})
+}
+
 // trace is a helper function for TraceExternal and TraceGeneric, you probably don't want
 // to use it directly.
 func trace(ctx context.Context, name string, fn func(Tx) error) *Trace {
@@ -189,6 +206,18 @@ func trace(ctx context.Context, name string, fn func(Tx) error) *Trace {
 		}
 	}
 	return &Trace{nil, func() error { return nil }}
+}
+
+// caller returns the name of the function that called the function this function was called from.
+// n = 1 => caller of caller()
+// n = 2 => caller of caller of call()
+// etc.
+func caller(n int) string {
+	name := "unknown"
+	if pc, _, _, ok := runtime.Caller(n); ok {
+		name = filepath.Base(runtime.FuncForPC(pc).Name())
+	}
+	return name
 }
 
 type key int
