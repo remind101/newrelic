@@ -24,10 +24,12 @@ type tx struct {
 	Tracer   TxTracer
 	Reporter TxReporter
 
-	id   int64
-	name string
-	url  string
-	ss   *SegmentStack
+	id       int64
+	name     string
+	url      string
+	category string
+	txnType  TransactionType
+	ss       *SegmentStack
 }
 
 // NewTx returns a new transaction.
@@ -36,6 +38,7 @@ func NewTx(name string) *tx {
 		Tracer:   &NRTxTracer{},
 		Reporter: &NRTxReporter{},
 		name:     name,
+		txnType:  WebTransaction,
 		ss:       NewSegmentStack(),
 	}
 }
@@ -47,10 +50,16 @@ func NewRequestTx(name string, url string) *tx {
 	return t
 }
 
-// Start starts a transaction, setting the id.
-func (t *tx) Start() error {
-	var err error
+// NewBackgroundTx returns a new background transaction
+func NewBackgroundTx(name string, category string) *tx {
+	t := NewTx(name)
+	t.txnType = OtherTransaction
+	t.category = category
+	return t
+}
 
+// Start starts a transaction, setting the id.
+func (t *tx) Start() (err error) {
 	if t.id != 0 {
 		return ErrTxAlreadyStarted
 	}
@@ -60,8 +69,19 @@ func (t *tx) Start() error {
 	if err = t.Tracer.SetTransactionName(t.id, t.name); err != nil {
 		return err
 	}
+	if err = t.Tracer.SetTransactionType(t.id, t.txnType); err != nil {
+		return err
+	}
 	if t.url != "" {
-		return t.Tracer.SetTransactionRequestURL(t.id, t.url)
+		if err = t.Tracer.SetTransactionRequestURL(t.id, t.url); err != nil {
+
+			return err
+		}
+	}
+	if t.category != "" {
+		if err = t.Tracer.SetTransactionCategory(t.id, t.category); err != nil {
+			return err
+		}
 	}
 	return nil
 }
