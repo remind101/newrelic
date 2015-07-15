@@ -7,6 +7,13 @@ import (
 
 var ErrTxAlreadyStarted = errors.New("transaction already started")
 
+type TransactionType int
+
+const (
+	WebTransaction TransactionType = iota
+	OtherTransaction
+)
+
 // TxTracer handles transaction tracing.
 type TxTracer interface {
 	BeginTransaction() (int64, error)
@@ -14,6 +21,8 @@ type TxTracer interface {
 
 	SetTransactionName(txnID int64, name string) error
 	SetTransactionRequestURL(txnID int64, url string) error
+	SetTransactionType(txnID int64, txnType TransactionType) error
+	SetTransactionCategory(txnID int64, category string) error
 
 	BeginGenericSegment(txnID int64, parentID int64, name string) (int64, error)
 	BeginDatastoreSegment(txnID int64, parentID int64, table string, operation string, sql string, rollupName string) (int64, error)

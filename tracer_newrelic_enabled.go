@@ -3,7 +3,11 @@
 // The new relic agent sdk currently only support linux (https://docs.newrelic.com/docs/agents/agent-sdk/getting-started/new-relic-agent-sdk)
 package newrelic
 
-import "github.com/remind101/newrelic/sdk"
+import (
+	"fmt"
+
+	"github.com/remind101/newrelic/sdk"
+)
 
 // Init initializes the embedded newrelic agent with the given app name and license key.
 func Init(app, key string) {
@@ -37,6 +41,21 @@ func (t *NRTxTracer) EndSegment(txnID, parentID int64) error {
 }
 func (t *NRTxTracer) SetTransactionRequestURL(txnID int64, url string) error {
 	_, err := sdk.TransactionSetRequestURL(txnID, url)
+	return err
+}
+func (t *NRTxTracer) SetTransactionType(txnID int64, txnType TransactionType) (err error) {
+	switch txnType {
+	case WebTransaction:
+		_, err = sdk.TransactionSetTypeWeb(txnID)
+	case OtherTransaction:
+		_, err = sdk.TransactionSetTypeOther(txnID)
+	default:
+		err = fmt.Errorf("unknown transaction type: %#v", txnType)
+	}
+	return err
+}
+func (t *NRTxTracer) SetTransactionCategory(txnID int64, category string) error {
+	_, err := sdk.TransactionSetCategory(txnID, category)
 	return err
 }
 func (t *NRTxTracer) EndTransaction(txnID int64) error {
