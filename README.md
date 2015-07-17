@@ -25,6 +25,7 @@ See `./example/main.go` for a more complete example.
 import "github.com/remind101/newrelic"
 
 func main() {
+    newrelic.Init("newrelic app name", "newrelic license key")
     tx := newrelic.NewTx("/my/transaction/name")
     tx.Start()
     defer tx.End()
