@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"path/filepath"
 	"runtime"
+	"sync"
 
 	"golang.org/x/net/context"
 )
@@ -30,6 +31,8 @@ type tx struct {
 	category string
 	txnType  TransactionType
 	ss       *SegmentStack
+
+	mtx *sync.Mutex
 }
 
 // NewTx returns a new transaction.
@@ -40,6 +43,7 @@ func NewTx(name string) *tx {
 		name:     name,
 		txnType:  WebTransaction,
 		ss:       NewSegmentStack(),
+		mtx:      &sync.Mutex{},
 	}
 }
 
@@ -83,19 +87,26 @@ func (t *tx) Start() (err error) {
 			return err
 		}
 	}
+
 	return nil
 }
 
 // End ends a transaction.
 func (t *tx) End() error {
+	t.mtx.Lock()
+	defer t.mtx.Unlock()
+
 	for t.ss.Peek() != rootSegment {
-		t.EndSegment()
+		t.EndSegment() // discarding errors?
 	}
 	return t.Tracer.EndTransaction(t.id)
 }
 
 // StartGeneric starts a generic segment.
 func (t *tx) StartGeneric(name string) error {
+	t.mtx.Lock()
+	defer t.mtx.Unlock()
+
 	id, err := t.Tracer.BeginGenericSegment(t.id, t.ss.Peek(), name)
 	if err != nil {
 		return err
@@ -106,6 +117,9 @@ func (t *tx) StartGeneric(name string) error {
 
 // StartDatastore starts a datastore segment.
 func (t *tx) StartDatastore(table, operation, sql, rollupName string) error {
+	t.mtx.Lock()
+	defer t.mtx.Unlock()
+
 	id, err := t.Tracer.BeginDatastoreSegment(t.id, t.ss.Peek(), table, operation, sql, rollupName)
 	if err != nil {
 		return err
@@ -116,6 +130,9 @@ func (t *tx) StartDatastore(table, operation, sql, rollupName string) error {
 
 // StartExternal starts an external segment.
 func (t *tx) StartExternal(host, name string) error {
+	t.mtx.Lock()
+	defer t.mtx.Unlock()
+
 	id, err := t.Tracer.BeginExternalSegment(t.id, t.ss.Peek(), host, name)
 	if err != nil {
 		return err
@@ -126,6 +143,9 @@ func (t *tx) StartExternal(host, name string) error {
 
 // EndSegment ends the segment at the top of the stack.
 func (t *tx) EndSegment() error {
+	t.mtx.Lock()
+	defer t.mtx.Unlock()
+
 	if id, ok := t.ss.Pop(); ok {
 		return t.Tracer.EndSegment(t.id, id)
 	}
@@ -134,6 +154,9 @@ func (t *tx) EndSegment() error {
 
 // ReportError reports an error that occured during the transaction.
 func (t *tx) ReportError(exceptionType, errorMessage, stackTrace, stackFrameDelim string) error {
+	t.mtx.Lock()
+	defer t.mtx.Unlock()
+
 	_, err := t.Reporter.ReportError(t.id, exceptionType, errorMessage, stackTrace, stackFrameDelim)
 	return err
 }
