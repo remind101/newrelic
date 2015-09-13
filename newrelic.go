@@ -50,7 +50,7 @@ func RecordMetrics(interval time.Duration) {
 func RecordMetricsWithRecorder(r Recorder) {
 	ticker := time.NewTicker(r.Interval())
 	go func() {
-		for range ticker.C {
+		for _ = range ticker.C {
 			r.Record()
 		}
 	}()
