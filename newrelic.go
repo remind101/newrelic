@@ -33,6 +33,7 @@ type TxTracer interface {
 // TxReporter reports the first error that occured during a transaction.
 type TxReporter interface {
 	ReportError(txnID int64, exceptionType, errorMessage, stackTrace, stackFrameDelim string) (int, error)
+	ReportCustomMetric(name string, value float64) (int, error)
 }
 
 // Recorder handles metrics recording.
