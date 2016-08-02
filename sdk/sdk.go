@@ -3,6 +3,7 @@
 package sdk
 
 // #cgo LDFLAGS: -L/usr/local/lib -lnewrelic-collector-client -lnewrelic-common -lnewrelic-transaction
+// #cgo go1.5 CFLAGS: -I ${SRCDIR}/../include
 // #include "newrelic_collector_client.h"
 // #include "newrelic_common.h"
 // #include "newrelic_transaction.h"
