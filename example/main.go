@@ -60,7 +60,7 @@ func apiCall(ctx context.Context) {
 
 func queryDB(ctx context.Context) {
 	t := newrelic.TraceDatastore(ctx, "users", "SELECT", "select * from users", "select.users")
-	t.Done()
+	defer t.Done()
 
 	// Query DB
 }
